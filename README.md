@@ -26,10 +26,8 @@
 #### Tests
 
 - `npm test`
-
-- Any tests of note?
-- Describe any tests that you did not complete, skipped, etc
+- Scaffolded, not yet implemented
 
 #### UML
 
-- ![]()
+- ![uml](./images/capsclass16.jpg)
