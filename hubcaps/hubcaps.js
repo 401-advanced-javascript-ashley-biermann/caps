@@ -45,3 +45,7 @@ function handleMessage(payload) {
 server.listen(PORT, () => {
   console.log('hubCAPS server up');
 });
+
+module.exports = {
+  handleMessage
+}

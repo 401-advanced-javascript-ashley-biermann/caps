@@ -47,3 +47,8 @@ Client.on('data', (payload) => {
     handleDeliveryComplete(message);
   }
 });
+
+module.exports = {
+  generateOrder,
+  handleDeliveryComplete
+}

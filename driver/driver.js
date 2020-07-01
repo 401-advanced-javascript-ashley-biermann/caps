@@ -46,3 +46,7 @@ function handleMessage(payload) {
         }, 3000);
     }, 1000);
 }
+
+module.exports = {
+    handleMessage
+}
