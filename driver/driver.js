@@ -7,32 +7,42 @@
 
 const t = require('../lib/timestamp.js');
 const net = require('net');
-
 const Client = new net.Socket();
 
-// Connect to the CAPS server
 Client.connect(3000, 'localhost', () => {
-  console.log('Driver is connected to hubCAPS');
+    console.log('Driver is connected to hubCAPS');
 })
 
-// Listen for the data event coming in from the CAPS server
 Client.on('data', (payload) => {
-    console.log(payload.toString());
-  });
-    // When data arrives, parse it (it should be JSON) and look for the event property and begin processing…
+    let message = JSON.parse(payload.toString());
 
-    // If the event is called pickup
-        // Simulate picking up the package
-            // Wait 1 second
-            // Log “picking up id” to the console
-            // Create a message object with the following keys:
-                // event - ‘in-transit’
-                // payload - the payload from the data object you just received
-            // Write that message (as a string) to the CAPS server
-            
-        // Simulate delivering the package
-            // Wait 3 seconds
-            // Create a message object with the following keys:
-                // event - ‘delivered’
-                // payload - the payload from the data object you just received
-            // Write that message (as a string) to the CAPS server
+    if (message.event === 'new-package-available') {
+        handleMessage(message);
+    }
+});
+
+function handleMessage(payload) {
+    
+    setTimeout(function () {
+
+        console.log({ event: 'DRIVER: I have picked up the package', orderId: payload.payload.orderId }); //KEEP
+
+        let message = {
+            event: 'in-transit',
+            payload: payload.payload,
+        }
+
+        Client.write(JSON.stringify({ event: message.event, payload: message.payload }));
+
+        setTimeout(function () {
+
+            let deliveredMessage = {
+                event: 'package-delivered',
+                payload: payload.payload,
+            }
+            console.log(deliveredMessage);
+
+            Client.write(JSON.stringify({ event: deliveredMessage.event, payload: deliveredMessage.payload }));
+        }, 3000);
+    }, 1000);
+}
