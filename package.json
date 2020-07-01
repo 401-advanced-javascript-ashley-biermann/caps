@@ -2,7 +2,7 @@
   "name": "caps",
   "version": "1.0.0",
   "description": "CAPS - Code Academy Parcel Service",
-  "main": "index.js",
+  "main": "./lib/vendor.js",
   "scripts": {
     "start": "node ./lib/vendor.js",
     "test": "jest --verbose",
