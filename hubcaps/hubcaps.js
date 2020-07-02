@@ -8,28 +8,57 @@
  * Rebroadcasts to all others in connected clients pool
  */
 
-const net = require('net');
+ //the CAPS server should be logging everything
+
+
+const socketIO = require('socket.io');
 const t = require('../lib/timestamp.js');
 const PORT = process.env.PORT || 3000;
-const server = net.createServer();
+const io = socketIO(3000);
 
-const socketPool = [];
+io.on('connection', (socket) => {
 
-server.on('connection', (socket) => {
-  const id = Math.floor(Math.random() * 100000);
-  socketPool[id] = socket;
-
-  console.log('Connection established at id ' + id);
-
-  socket.on('data', handleMessage);
-
-  socket.on('error', (e) => console.log(`error in socket.on ${e}`));
-  socket.on('end', () => { delete socketPool[id] });
+  socket.on('auth', (payload) => {
+    io.emit('auth', 'payload recieved');
+    socket.broadcast.emit('auth', 'only other clients should see this');
+  });
 });
 
-server.on('error', (e) => {
-  console.log('SERVER ERROR found', e);
+let caps = io.of('/caps');
+
+caps.on('connection', (socket) => {
+
+  let currentRoom = null;
+
+  console.log('someone joined the /caps namespace');
+
+  socket.on('code', (payload) => {
+    console.log('server side payload', payload);
+    
+    if(!currentRoom) {
+      caps.emit('code', payload);
+    }
+    if(currentRoom) {
+      caps.to(currentRoom).emit('code', payload);
+    }
+  });
+
+  socket.on('join', room => {
+    console.log(`someone joined ${room}`);
+    currentRoom = room;
+    socket.join(room);
+  });
 });
+
+
+
+    // Monitor the correct general events
+        // pickup, in-transit, delivered
+        // Broadcast the events and payload back out to the appropriate clients in the caps namespace
+            // pickup can go out to all sockets (broadcast it) so that the drivers can hear it
+            // in-transit and delivered are meant to be heard only by the right vendor
+                // Emit those messages and payload only to the room (vendor) for which the message was intended
+
 
 function handleMessage(payload) {
   let message = JSON.parse(payload.toString());
@@ -42,9 +71,7 @@ function handleMessage(payload) {
   }
 }
 
-server.listen(PORT, () => {
-  console.log('hubCAPS server up');
-});
+
 
 module.exports = {
   handleMessage
