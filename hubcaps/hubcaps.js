@@ -8,7 +8,7 @@
  * Rebroadcasts to all others in connected clients pool
  */
 
- //the CAPS server should be logging everything
+//the CAPS server should be logging everything
 
 
 const socketIO = require('socket.io');
@@ -34,11 +34,11 @@ caps.on('connection', (socket) => {
 
   socket.on('code', (payload) => {
     console.log('server side payload', payload);
-    
-    if(!currentRoom) {
+
+    if (!currentRoom) {
       caps.emit('code', payload);
     }
-    if(currentRoom) {
+    if (currentRoom) {
       caps.to(currentRoom).emit('code', payload);
     }
   });
@@ -48,31 +48,36 @@ caps.on('connection', (socket) => {
     currentRoom = room;
     socket.join(room);
   });
+
+  socket.on('new-package-available', handleNewPackage);
+  socket.on('in-transit', handleInTransit);
+  socket.on('package-delivered', handleDelivered);
+  socket.on('order-complete', handleOrderComplete);
 });
 
-
-
-    // Monitor the correct general events
-        // pickup, in-transit, delivered
-        // Broadcast the events and payload back out to the appropriate clients in the caps namespace
-            // pickup can go out to all sockets (broadcast it) so that the drivers can hear it
-            // in-transit and delivered are meant to be heard only by the right vendor
-                // Emit those messages and payload only to the room (vendor) for which the message was intended
-
-
-function handleMessage(payload) {
-  let message = JSON.parse(payload.toString());
-  console.log(message);
-  if (message.event && message.payload) {
-    // what can we do here to only write to speific sockets
-    for (let socket in socketPool) {
-      socketPool[socket].write(JSON.stringify(message));
-    }
+function handleNewPackage(payload) {
+  console.log(`HUBCAPS: New package available for pickup from Vendor. Order ${payload.orderId}`);
+  if (payload) {
+   caps.emit('new-package-available', payload);
   }
 }
 
+function handleInTransit(payload) {
+  console.log(`HUBCAPS: Order ${payload.orderId} is in transit`);
+}
 
+function handleDelivered(payload) {
+  console.log(`HUBCAPS: Order ${payload.orderId} has been delivered`);
+  caps.emit('package-delivered', payload);
+}
+
+function handleOrderComplete(payload) {
+  console.log(`HUBCAPS: Order ${payload.orderId} complete`);
+}
 
 module.exports = {
-  handleMessage
+ handleNewPackage,
+ handleInTransit,
+ handleDelivered,
+ handleOrderComplete
 }
