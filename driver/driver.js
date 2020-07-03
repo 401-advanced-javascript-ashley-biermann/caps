@@ -5,14 +5,8 @@
  * This application is intended to be run by delivery drivers in their vehicles
  */
 
-
-// Simulate delivering the package
-// Wait 3 seconds
-// emit a delivered event to the CAPS server with the payload
-
 const t = require('../lib/timestamp.js');
 const io = require('socket.io-client');
-
 const socket = io.connect('http://localhost:3000/caps');
 
 socket.emit('auth', { event: 'Driver Connected' });

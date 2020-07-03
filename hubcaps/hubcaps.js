@@ -8,9 +8,6 @@
  * Rebroadcasts to all others in connected clients pool
  */
 
-//the CAPS server should be logging everything
-
-
 const socketIO = require('socket.io');
 const t = require('../lib/timestamp.js');
 const PORT = process.env.PORT || 3000;
