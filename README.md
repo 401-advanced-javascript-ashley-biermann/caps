@@ -6,7 +6,7 @@
 
 ### Links and Resources
 
-- [submission PR](https://github.com/401-advanced-javascript-ashley-biermann/caps/pull/2)
+- [submission PR](https://github.com/401-advanced-javascript-ashley-biermann/caps/pull/3)
 - [ci/cd](https://github.com/401-advanced-javascript-ashley-biermann/notes/tree/master/.github/workflows) (GitHub Actions)
 - [back-end server url]() (not yet implemented)
 - [front-end application]() (not yet implemented)
