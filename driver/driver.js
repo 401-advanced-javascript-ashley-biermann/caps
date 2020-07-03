@@ -5,48 +5,42 @@
  * This application is intended to be run by delivery drivers in their vehicles
  */
 
+
+// Simulate delivering the package
+// Wait 3 seconds
+// emit a delivered event to the CAPS server with the payload
+
 const t = require('../lib/timestamp.js');
-const net = require('net');
-const Client = new net.Socket();
+const io = require('socket.io-client');
 
-Client.connect(3000, 'localhost', () => {
-    console.log('Driver is connected to hubCAPS');
-})
+const socket = io.connect('http://localhost:3000/caps');
 
-Client.on('data', (payload) => {
-    let message = JSON.parse(payload.toString());
+socket.emit('auth', { event: 'Driver Connected' });
+socket.emit('join', 'driverRoom');
+socket.emit('code', 'Here is info from the Driver');
 
-    if (message.event === 'new-package-available') {
-        handleMessage(message);
-    }
+socket.on('code', (payload) => {
+    console.log('Driver side payload', payload);
 });
 
-function handleMessage(payload) {
-    
+socket.on('driverRoom', console.log);
+
+socket.on('new-package-available', handleGoGetPackage)
+
+
+function handleGoGetPackage(payload) {
+    console.log(`DRIVER: Order ${payload.orderId} is in transit`);
+
     setTimeout(function () {
-
-        console.log({ event: 'DRIVER: I have picked up the package', orderId: payload.payload.orderId }); //KEEP
-
-        let message = {
-            event: 'in-transit',
-            payload: payload.payload,
-        }
-
-        Client.write(JSON.stringify({ event: message.event, payload: message.payload }));
+        socket.emit('in-transit', payload);
 
         setTimeout(function () {
-
-            let deliveredMessage = {
-                event: 'package-delivered',
-                payload: payload.payload,
-            }
-            console.log(deliveredMessage);
-
-            Client.write(JSON.stringify({ event: deliveredMessage.event, payload: deliveredMessage.payload }));
+            console.log(`DRIVER: Order ${payload.orderId} has been delivered`);
+            socket.emit('package-delivered', payload)
         }, 3000);
     }, 1000);
 }
 
 module.exports = {
-    handleMessage
+    handleGoGetPackage
 }

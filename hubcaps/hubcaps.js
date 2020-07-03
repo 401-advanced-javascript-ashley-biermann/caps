@@ -8,44 +8,76 @@
  * Rebroadcasts to all others in connected clients pool
  */
 
-const net = require('net');
+//the CAPS server should be logging everything
+
+
+const socketIO = require('socket.io');
 const t = require('../lib/timestamp.js');
 const PORT = process.env.PORT || 3000;
-const server = net.createServer();
+const io = socketIO(3000);
 
-const socketPool = [];
+io.on('connection', (socket) => {
 
-server.on('connection', (socket) => {
-  const id = Math.floor(Math.random() * 100000);
-  socketPool[id] = socket;
-
-  console.log('Connection established at id ' + id);
-
-  socket.on('data', handleMessage);
-
-  socket.on('error', (e) => console.log(`error in socket.on ${e}`));
-  socket.on('end', () => { delete socketPool[id] });
+  socket.on('auth', (payload) => {
+    io.emit('auth', 'payload recieved');
+    socket.broadcast.emit('auth', 'only other clients should see this');
+  });
 });
 
-server.on('error', (e) => {
-  console.log('SERVER ERROR found', e);
-});
+let caps = io.of('/caps');
 
-function handleMessage(payload) {
-  let message = JSON.parse(payload.toString());
-  console.log(message);
-  if (message.event && message.payload) {
-    // what can we do here to only write to speific sockets
-    for (let socket in socketPool) {
-      socketPool[socket].write(JSON.stringify(message));
+caps.on('connection', (socket) => {
+
+  let currentRoom = null;
+
+  console.log('someone joined the /caps namespace');
+
+  socket.on('code', (payload) => {
+    console.log('server side payload', payload);
+
+    if (!currentRoom) {
+      caps.emit('code', payload);
     }
+    if (currentRoom) {
+      caps.to(currentRoom).emit('code', payload);
+    }
+  });
+
+  socket.on('join', room => {
+    console.log(`someone joined ${room}`);
+    currentRoom = room;
+    socket.join(room);
+  });
+
+  socket.on('new-package-available', handleNewPackage);
+  socket.on('in-transit', handleInTransit);
+  socket.on('package-delivered', handleDelivered);
+  socket.on('order-complete', handleOrderComplete);
+});
+
+function handleNewPackage(payload) {
+  console.log(`HUBCAPS: New package available for pickup from Vendor. Order ${payload.orderId}`);
+  if (payload) {
+   caps.emit('new-package-available', payload);
   }
 }
 
-server.listen(PORT, () => {
-  console.log('hubCAPS server up');
-});
+function handleInTransit(payload) {
+  console.log(`HUBCAPS: Order ${payload.orderId} is in transit`);
+}
+
+function handleDelivered(payload) {
+  console.log(`HUBCAPS: Order ${payload.orderId} has been delivered`);
+  caps.emit('package-delivered', payload);
+}
+
+function handleOrderComplete(payload) {
+  console.log(`HUBCAPS: Order ${payload.orderId} complete`);
+}
 
 module.exports = {
-  handleMessage
+ handleNewPackage,
+ handleInTransit,
+ handleDelivered,
+ handleOrderComplete
 }

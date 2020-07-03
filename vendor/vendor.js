@@ -6,17 +6,21 @@
  */
 
 require('dotenv').config();
-const net = require('net');
 const faker = require('faker');
 const t = require('../lib/timestamp.js');
+const io = require('socket.io-client');
+const storeName = process.env.STORE_NAME;
 
-const Client = new net.Socket();
-const myStore = process.env.STORE_NAME;
+const socket = io.connect('http://localhost:3000/caps');
 
+socket.emit('auth', { event: 'Vendor Connected' });
+socket.emit('join', 'vendorRoom');
+socket.emit('code', 'Here is info from the Vendor');
 
-Client.connect(3000, 'localhost', () => {
-  console.log('Vendor is connected to hubCAPS');
+socket.on('code', (payload) => {
+  console.log('Vendor side payload', payload);
 });
+socket.on('package-delivered', handleDeliveryComplete);
 
 function generateOrder(storeName, orderId, customerName, address) {
   let payload = {
@@ -26,27 +30,19 @@ function generateOrder(storeName, orderId, customerName, address) {
     address: address
   }
   
-  console.log({ event: 'VENDOR: Package ready to deliver to customer', payload }); //KEEP
+  console.log(`VENDOR: Package ready to deliver to customer. Order ${payload.orderId}`, payload);
   
-  Client.write(JSON.stringify({ event: 'new-package-available', payload: payload }));
+  socket.emit('new-package-available', payload);
 }
 
 function handleDeliveryComplete(payload) {
-  console.log('Thank you for delivering order number ' + payload.payload.orderId + '!');
+  console.log(`VENDOR: Thank you for delivering Order ${payload.orderId}`, payload);
+  socket.emit('order-complete', payload);
 }
 
 setInterval(() => {
-  generateOrder(myStore, faker.fake('{{random.number}}'), faker.fake('{{name.lastName}}'), faker.fake('{{address.streetAddress}}'));
-}, 5000);
-
-
-Client.on('data', (payload) => {
-  let message = JSON.parse(payload.toString());
-
-  if (message.event === 'package-delivered') {
-    handleDeliveryComplete(message);
-  }
-});
+  generateOrder(storeName, faker.fake('{{random.number}}'), faker.fake('{{name.lastName}}'), faker.fake('{{address.streetAddress}}'));
+}, 10000);
 
 module.exports = {
   generateOrder,
