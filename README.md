@@ -1,4 +1,4 @@
-# Lab18
+# Lab19 (extra credit lab)
 
 ## CAPS - Code Academy Parcel Service
 
@@ -6,10 +6,8 @@
 
 ### Links and Resources
 
-- [submission PR](https://github.com/401-advanced-javascript-ashley-biermann/caps/pull/3)
+- [submission PR](https://github.com/401-advanced-javascript-ashley-biermann/caps/pull/4)
 - [ci/cd](https://github.com/401-advanced-javascript-ashley-biermann/notes/tree/master/.github/workflows) (GitHub Actions)
-- [back-end server url]() (not yet implemented)
-- [front-end application]() (not yet implemented)
 
 ### Setup
 
@@ -17,6 +15,11 @@
 - Required for each Application folder: `driver`, `vendor`, `hubcaps` 
 - `PORT` 
 - `STORE_NAME`
+-----
+- Secondary App Structure
+- Required for each Application folder: `acme-widgets.js`, `flowers.js`, `caps-api` 
+- `PORT` (express port and socket.io both required)
+- `STORE_NAME` (not needed for `caps-api`);
 
 #### How to initialize/run your application (where applicable)
 - Three Applications folders located at root: `driver`, `vendor`, `hubcaps` 
